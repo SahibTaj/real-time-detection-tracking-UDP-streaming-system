@@ -67,84 +67,37 @@ UDP was chosen instead of TCP because real-time perception systems prioritize lo
 
 - Handles packet loss and frame drops
 
-## Detection
-### What we used
+## Configuration
+### Detection
 
-Model: YOLOv8n (pretrained COCO)
+- Model: YOLOv8n (pretrained COCO)
 
-### Why
+- Runs on CPU
 
-- Lightweight and fast on CPU
+- Configurable confidence threshold
 
-- Good balance between accuracy and speed
+- Configurable resolution
 
-- Supports real-time inference without GPU
+### Tracking
 
-- Detects common real-world objects
+- Algorithm: ByteTrack
 
-### What it detects
+- Maintains consistent IDs
 
-- person
+- Handles occlusion
 
-- chair
+- Tracks 5+ objects simultaneously
 
-- laptop
+### Streaming
 
-- phone
+- Protocol: UDP
 
-- bottle
+- JPEG compression
 
-- backpack
+- Packet size handling
 
-- vehicle classes
+- Frame reconstruction on client
 
-At least 3 classes required → system detects many more.
-
-### Performance
-
-Runs in real time on CPU while maintaining required FPS.
-
-## Tracking
-### Algorithm used
-
-ByteTrack
-
-### Why
-
-- Maintains stable IDs
-
-- Handles occlusions well
-
-- Lightweight and real-time capable
-
-- Works well with YOLO detections
-
-### What tracking provides
-
-- Unique ID for each object
-
-- ID persistence across frames
-
-- Handles temporary occlusion
-
-- Trajectory visualization
-
-- Supports multiple objects simultaneously
-
-System successfully tracks 5+ objects at once.
-
-## UDP Streaming
-### Why UDP
-
-UDP is used in real-time systems because:
-
-- lower latency than TCP
-
-- no connection overhead
-
-- suitable for live video
-
-Packet loss is acceptable since new frames arrive quickly.
 
 ## System Design
 
@@ -155,6 +108,7 @@ For tracking, ByteTrack was chosen because of its robustness and ability to main
 UDP was selected as the streaming protocol because it offers significantly lower latency than TCP, which is critical for real-time perception systems. Since UDP has a packet size limit, each frame is compressed using JPEG and fragmented into smaller packets. Each packet contains metadata including frame ID and packet index, allowing the client to reconstruct frames correctly. Old frames are dropped on the client to prevent lag buildup.
 
 A key challenge was maintaining stable FPS while performing detection, tracking, and streaming simultaneously on CPU. This was solved by running detection periodically and using tracking between detection frames. Additional optimizations included JPEG compression tuning and packet buffering strategies. The final system consistently achieves real-time performance above the required FPS threshold.
+
 ### Packet structure
     [frame_id | packet_id | total_packets | image_data]
 
@@ -244,23 +198,6 @@ Streaming:
 - UDP port
 
 - packet size
-
-## Design Decisions
-### Model choice
-
-YOLOv8n was selected because it provides strong performance on CPU without requiring GPU acceleration.
-
-### Tracking choice
-
-ByteTrack was chosen for its simplicity and strong ID persistence in real-time systems.
-
-### UDP vs TCP
-
-UDP provides lower latency, making it suitable for real-time video streaming. Packet loss is mitigated by sending continuous frames.
-
-### Frame skipping
-
-Detection does not need to run on every frame. Tracking fills gaps between detections, improving performance while keeping accuracy high.
 
 ## Future Improvements
 
