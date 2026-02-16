@@ -146,23 +146,15 @@ UDP is used in real-time systems because:
 
 Packet loss is acceptable since new frames arrive quickly.
 
-### Challenges
+## System Design
 
-UDP has a maximum packet size of ~65KB.
-Video frames are larger than this.
+The goal of this project was to design a real-time perception pipeline capable of running on standard CPU hardware while maintaining low latency and stable tracking. For object detection, YOLOv8n was selected due to its strong balance between speed and accuracy on CPU. Larger models improve accuracy but significantly reduce FPS, while smaller models struggle with multi-object detection. YOLOv8n allows reliable detection of common COCO classes such as person, bottle, phone, and laptop while maintaining real-time inference.
 
-### Solution
+For tracking, ByteTrack was chosen because of its robustness and ability to maintain consistent object identities across frames. Unlike simple IOU trackers, ByteTrack associates both high-confidence and low-confidence detections, allowing it to recover objects during occlusion and maintain trajectory continuity. This makes it well-suited for real-time multi-object tracking scenarios.
 
-Each frame is:
+UDP was selected as the streaming protocol because it offers significantly lower latency than TCP, which is critical for real-time perception systems. Since UDP has a packet size limit, each frame is compressed using JPEG and fragmented into smaller packets. Each packet contains metadata including frame ID and packet index, allowing the client to reconstruct frames correctly. Old frames are dropped on the client to prevent lag buildup.
 
-1. Compressed using JPEG
-
-2. Split into smaller packets
-
-3. Sent with metadata
-
-4. Reconstructed on client
-
+A key challenge was maintaining stable FPS while performing detection, tracking, and streaming simultaneously on CPU. This was solved by running detection periodically and using tracking between detection frames. Additional optimizations included JPEG compression tuning and packet buffering strategies. The final system consistently achieves real-time performance above the required FPS threshold.
 ### Packet structure
     [frame_id | packet_id | total_packets | image_data]
 
