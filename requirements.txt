@@ -1,0 +1,19 @@
+# Core
+numpy==1.26.4
+
+# OpenCV (stable with numpy 1.26)
+opencv-python==4.8.1.78
+
+# Ultralytics (ONNX export stable)
+ultralytics==8.2.0
+
+# Torch CPU only
+torch==2.2.2
+torchvision==0.17.2
+
+# Tracking library
+supervision==0.18.0
+
+# ONNX runtime
+onnx==1.15.0
+onnxruntime==1.17.3
